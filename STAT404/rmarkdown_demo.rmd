@@ -1,0 +1,83 @@
+---
+title: 'Notes 0 Demo - R Markdown'
+author: "STAT 404: Statistical Computing"
+
+# output: pdf_document
+---
+
+# Headers
+
+Of course, a good document may contain sections, subsections and subsubsections to divide itself into differnet parts for better readability. We can achieve this by introducing headers:
+
+# Header 1
+
+## Header 2
+
+### Header 3
+
+# Lists
+
+We can make an unordered list:
+
+* Item 1
+* Item 2
+  
+and an ordered one:
+
+1. Item 1
+2. Item 2
+  1. Sub-item 1
+
+# Font styles
+
+We can emphasize some text by *italic* and **bold** fonts, or ***bold***.
+
+
+# Math
+
+We can type in-line math ($x+y=2$) or display math:
+$$
+x+y=2
+$$
+through $\mbox{\LaTeX}$ syntax. With $\mbox{\LaTeX}$, you can type pretty fancy equation:
+$$
+f(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left\{ \frac{1}{2\sigma^2}(x-\mu)^2 \right\}
+$$
+(By the way, what is this function?) You can find many tutorials about $\mbox{\LaTeX}$ online.
+
+(Note that if you don't have a $\mbox{\LaTeX}$ engine installed, you should not set output as "pdf_document".)
+
+
+# More
+
+There are more useful R Markdown syntax that you can try.
+See [Markdown Basics](https://rmarkdown.rstudio.com/authoring_basics.html). 
+(This is also a demonstration on how to incorporate links.)
+
+
+# R code chunks 
+
+One crucial feature of R Markdown syntax is the ability to include R codes and outputs in the document. This can be done through R code chunks.
+
+```{r}
+1 + 1
+```
+
+
+The code chunks are sent to the same R session sequentially, if you knitr the file.
+```{r}
+x <- 1
+y <- 2
+```
+
+So you can use variables saved in previous chunks.
+```{r}
+x
+y
+```
+
+(You can also choose not to knitr the file, but send the code chunks to the R Console manually in any order as you want. This may be useful when you are in the middle of performing the analysis. But you should double check the outputs from knitr, especially when you submit your homework.)
+
+You can make your document adaptive to your analysis without hard coding the results:
+
+Peter gave me `r x` dollars and Mary gave me `r y` dollars, I got in total `r x+y` dollars.
