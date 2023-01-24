@@ -1,0 +1,71 @@
+---
+title: "STAT404_review"
+output: html_document
+date: "2023-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1/20
+
+# Type coercion
+
+-   R will **coerce** values to be the same type
+-   R follows a fixed coercion order until all values are the same:
+
+character $\leftarrow$ double $\leftarrow$ integer $\leftarrow$ logical
+
+# Testing types
+
+-   Inf is infinity.
+-   NaN means 'Not a Number'
+
+cf  - a non-zero number divided by zero creates infinity\
+- NA: 'Not Available' which is not a number as well
+
+```{r}
+pi / 0 ## = Inf a non-zero number divided by zero creates infinity
+0 / 0  ## =  NaN
+
+1/0 + 1/0 # Inf
+1/0 - 1/0 # NaN
+
+is.numeric(7/0)
+is.na(7/0)
+typeof(7/0)
+
+is.numeric(0/0)
+is.na(0/0)
+typeof(0/0)
+```
+
+## 1/23
+
+# Peculiarites
+Usually better to use all.equal() than exact comparison
+```{r}
+(0.5 - 0.3) == (0.3 - 0.1)
+all.equal(0.5-0.3, 0.3-0.1)
+
+is.integer(7)
+is.integer(as.integer(7))
+typeof(2)
+typeof(2L)
+```
+
+# Matrices
+
+-   specify ncol, and/or byrow=TRUE to fill by rows
+-   Generally it is by columns.
+-   Matrix multiplication operator %*%
+
+# 
+-   summary(): vector-style summary of column
+
+`apply()`, takes 3 arguments:
+
+- the array or matrix
+- then 1 for rows and 2 for columns, and so on.
+- then a name of the function to apply to each
