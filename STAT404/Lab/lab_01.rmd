@@ -1,0 +1,235 @@
+---
+title: "Lab 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error =TRUE)
+```
+
+***What's this about***
+
+Manipulating data objects; using the built-in functions,
+  doing numerical calculations, and basic plots; reinforcing core probabilistic
+  ideas.
+
+
+## R Markdown Test
+
+0. Open a new R Markdown file; set the output to HTML mode and "Knit". This should produce a web page with the knitting procedure executing your code blocks.
+
+```{r}
+## For reproducibility --- don't change this!
+set.seed(01202023)
+```
+
+# The Exponential Distribution
+
+The exponential distribution, $\mathrm{Exp}(\lambda)$ is defined by its cumulative distribution function
+
+$$ F(x) = 1-e^{-\lambda x} $$
+
+The R function `rexp` generates random variables with an exponential
+distribution.
+
+```
+rexp(n=10, rate=5)
+```
+
+produces 10 exponentially-distributed numbers with rate ($\lambda$) of 5.  If
+the second argument is omitted, the default rate is 1; this is the ``standard
+exponential distribution''.
+
+# Some simple manipulations and simple plots
+
+1. Generate 200 random values from the standard exponential distribution and store them in a vector `exp.draws.1`.  Find the mean and standard deviation of `exp.draws.1`.
+
+```{r}
+exp.draws.1 <- rexp(n=200)
+mean(exp.draws.1)
+sd(exp.draws.1)
+```
+
+
+2. Repeat, but change the rate to 0.1, 0.5, 5 and 10, storing the results in vectors called  `exp.draws.0.1`,  `exp.draws.0.5`,  `exp.draws.5` and  `exp.draws.10`. 
+
+```{r}
+exp.draws.0.1 = rexp(n=200, rate=0.1)
+exp.draws.0.5 = rexp(n=200, rate=0.5)
+exp.draws.5 = rexp(n=200, rate=5)
+exp.draws.10 = rexp(n=200, rate=10)
+```
+
+
+3. The function `plot()` is the generic function in R for the visual display of data. `hist()` is a function that takes in and bins data as a side effect. To use this function, we must first specify what we'd like to plot.
+    a. Use the `hist()` function to produce a histogram of your standard exponential distribution. 
+    b. Use `plot()` with this vector to display the random values from your standard distribution in order.
+    c. Now, use `plot()` with two arguments -- any two of your other stored random value vectors -- to create a scatterplot of the two vectors against each other.
+
+```{r}
+hist(exp.draws.1)
+```
+```{r}
+plot(exp.draws.1)
+```
+
+```{r}
+plot(x=exp.draws.1, y=exp.draws.5)
+```
+
+4. We'd now like to compare the properties of each of our vectors. Begin by creating a vector of the means of each of our five distributions in the order we created them and saving this to a variable name of your choice. Using this and other similar vectors, create the following scatterplots:
+    a. The five means versus the five rates used to generate the distribution.
+    b. The standard deviations versus the rates.
+    c. The means versus the standard deviations.
+
+For each plot, explain in words what's going on.
+
+```{r}
+exp.draws.1.mean = mean(exp.draws.1)
+exp.draws.0.1.mean =  mean(exp.draws.0.1)
+exp.draws.0.5.mean = mean(exp.draws.0.5)
+exp.draws.5.mean = mean(exp.draws.5)
+exp.draws.10.mean = mean(exp.draws.10)
+
+```
+
+```{r}
+exp.draws.means = c(exp.draws.0.1.mean,exp.draws.0.5.mean,exp.draws.1.mean,exp.draws.5.mean,exp.draws.10.mean)
+rates = c(0.1, 0.5, 1, 5, 10)
+plot(x=rates, y=exp.draws.means)
+
+
+```
+```{r}
+exp.draws.1.sd = sd(exp.draws.1)
+exp.draws.0.1.sd =  sd(exp.draws.0.1)
+exp.draws.0.5.sd = sd(exp.draws.0.5)
+exp.draws.5.sd = sd(exp.draws.5)
+exp.draws.10.sd = sd(exp.draws.10)
+exp.draws.sds = c(exp.draws.0.1.sd, exp.draws.0.5.sd, exp.draws.1.sd, exp.draws.5.sd, exp.draws.10.sd)
+plot(x=rates, y=exp.draws.sds)
+
+
+```
+```{r}
+plot(x=exp.draws.means, y=exp.draws.sds)
+```
+**Challenge**: for each plot, add a curve that corresponds to the relationships you'd expect to see in the theoretical population (i.e., with an infinite amount of draws, rather than just 200 draws).
+
+```{r}
+plot(x=rates, y=exp.draws.means)
+plot(x=rates, y=exp.draws.sds)
+plot(x=exp.draws.means, y=exp.draws.sds)
+
+
+
+```
+
+# Let's go big
+
+5. R's capacity for data and computation is large to what was available many years ago. 
+    a. To show this, generate 1.1 million numbers from the standard exponential distribution and store them in a vector called `big.exp.draws.1`. Calculate the mean and standard deviation.
+    b. Plot a histogram of `big.exp.draws.1`.  Does it match the function $1-e^{-x}$?  Should it? 
+    c. Find the mean of all of the entries in `big.exp.draws.1` which are strictly greater than 1. You may need to first create a new vector to identify which elements satisfy this.
+    d. Create a matrix, `big.exp.draws.1.mat`, containing the the values in 
+`big.exp.draws.1`, with 1100 rows and 1000 columns. Use this matrix as the input to the `hist()` function. Compare the result with the histogram in part b.
+    e. Calculate the mean of the 371st column of `big.exp.draws.1.mat`.
+    f. Now, find the means of all 1000 columns of `big.exp.draws.1.mat` simultaneously. Plot the histogram of column means.  Explain why its shape does not match the histogram in problem 5b).
+    g. Take the square of each number in `big.exp.draws.1`, and find the mean of this new vector.  Explain this in terms of the mean and standard deviation of `big.exp.draws.1`. ***Hint:*** think carefully about the formula R uses to calculate the standard deviation.
+
+```{r}
+big.exp.draws.1 <- rexp(n=1100000)
+mean(big.exp.draws.1)
+sd(big.exp.draws.1)
+```
+
+
+```{r}
+hist(big.exp.draws.1)
+```
+
+```{r}
+
+hist(big.exp.draws.1)
+xgrid <- seq(0,15, len=10000)
+yval <- exp(-xgrid) # density.  # exp is not exp dist. here if we want to get the pdf for exp dist with lambda 1.
+hist(big.exp.draws.1, freq=FALSE)
+lines(xgrid, yval)
+
+```
+
+```{r}
+big.exp.draws.1.subset <- big.exp.draws.1[big.exp.draws.1 > 1]
+mean(big.exp.draws.1.subset)
+```
+
+d.  Create a matrix, `big.exp.draws.1.mat`, containing the the values in `big.exp.draws.1`, with 1100 rows and 1000 columns. Use this matrix as the input to the `hist()` function. Compare the result with the histogram in part b.
+
+```{r}
+big.exp.draws.1.mat <- matrix(data = big.exp.draws.1, nrow=1100, ncol=1000)
+hist(big.exp.draws.1.mat)
+```
+
+e.  Calculate the mean of the 371st column of `big.exp.draws.1.mat`.
+```{r}
+mean(big.exp.draws.1.mat[,371])
+```
+
+f.  Now, find the means of all 1000 columns of `big.exp.draws.1.mat` simultaneously. Plot the histogram of column means. Explain why its shape does not match the histogram in problem 5b).
+
+```{r}
+col.mean.vec <- colMeans(big.exp.draws.1.mat)
+hist(col.mean.vec)
+```
+
+
+g.  Take the square of each number in `big.exp.draws.1`, and find the mean of this new vector. Explain this in terms of the mean and standard deviation of `big.exp.draws.1`. ***Hint:*** think carefully about the formula R uses to calculate the standard deviation.
+
+```{r}
+mean((big.exp.draws.1)^2)
+
+# var(x) = E(x^2) - [E(x)]^2
+sd(big.exp.draws.1)^2 + mean(big.exp.draws.1)^2
+
+```
+
+
+# Now let's go really big
+
+6. Let’s push R’s computational engine a little harder. Design an expression to generate 100 million numbers from $\mathrm{Exp}(5)$ to be saved in a vector called `huge.exp.draws`, but do not evaluate this command yet. 
+    a. Then ask the person next to you to name three of Justin Bieber’s songs and simultaneously evaluate your R command that defines `huge.exp.draws`. Which finished first, R or them? 
+
+```{r}
+huge.exp.draws = rexp(n=100000000, rate = 5)
+```
+
+    b. Calculate the mean and standard deviation of `huge.exp.draws`. Are they close to what you'd expect? Did R take longer to compute these, or to generate `huge.exp.draws` in the first place?
+```{r}
+mean(huge.exp.draws)
+sd(huge.exp.draws)
+
+system.time(rexp(n = 1e8, rate = 5))
+system.time(mean(huge.exp.draws))
+system.time(sd(huge.exp.draws))
+```
+
+    c. Calculate the median of `huge.exp.draws`. Did this median calculation take longer than calculating the mean? Is this surprising?
+```{r}
+median(huge.exp.draws)
+
+system.time(median(huge.exp.draws))
+```
+
+    d. Calculate the exponential of the median of the logs of `huge.exp.draws`, in one line of code. Did this take longer than the median calculation applied to `huge.exp.draws` directly? Is this surprising?
+```{r}
+exp(median(log(huge.exp.draws)))
+
+system.time(exp(median(log(huge.exp.draws))))
+```
+
+    e. Plot a histogram of of `huge.exp.draws`, again with a large setting of the `breaks` argument (e.g., `breaks=100`). Describe what you see; is this different from before, when we had 3 million draws? **Challenge**: Is this surprising? What distribution is this?
+```{r}
+hist(huge.exp.draws, breaks = 100)
+
+```
+
