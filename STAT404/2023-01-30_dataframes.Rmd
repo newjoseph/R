@@ -1,0 +1,340 @@
+---
+title: 'Notes 3: Data Frames and Control'
+author: "STAT 404: Statistical Computing"
+
+# output:
+#  revealjs::revealjs_presentation:
+#    css: slides_styles.css
+#    center: false
+#    transition: slide
+#    #self_contained: false
+#    #reveal_plugins: ["chalkboard"]
+#    reveal_options:
+#      slideNumber: true
+#    #  navigationMode: 'linear'
+
+# for course output; files in folder output
+output:
+  html_document: default
+  pdf_document: default
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding,
+  output_dir = "output", output_format = "all") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error =TRUE)
+```
+
+## Recap 
+
+1. What attribute defines an S3 object on a base type? What are some S3 objects we have discussed?
+
+  Ans: If it has a 'class' attribute, it's S3. Data frame has class 'data.frame'
+
+2. .Rmd demo: Open a new .Rmd file and practice the following three ways to insert a new code chunk
+
+- The keyboard shortcut Cmd + Option + I / Ctrl + Alt + I.
+
+```{r}
+
+```
+
+- The “Insert” button icon in the editor toolbar.
+```{r}
+
+```
+
+- By manually typing the chunk delimiters ```` ```{r} ```` and ```` ``` ````.
+
+```{r}
+```
+3. What do the chunk options `eval` and `echo` control?
+
+```{r eval=FALSE}
+
+```
+
+
+  Ans: `eval` : run code in chunk (True - evaluate, False - not evaluate)
+        `echo` : display mode (True - show, False - not show)
+---
+
+## Outline
+
+- Making and working with data frames
+    - Subsetting
+    - Adding new variables (columns)
+    - Removing variables (columns)
+
+---
+
+## In our last thrilling episode
+- Atomic vectors: series of values all of the same type  
+  e.g., `v[5]`, `v["name"]`
+- Arrays: multi-dimensional generalization of atomic vectors
+  e.g., `a[5,6,2]`, `a[,6,]`, `a["rowname", "colname", "layername"]`
+- Matrices: special 2D arrays with matrix math  
+  e.g., `m[5,6]`, `m[,6]`, `m[,"colname"]`
+- Lists: vector of values of mixed types  
+  e.g., `l[[3]]`, `l$name`
+- Data frames: list with **data.frame** class attribute; matrix and list indexing work
+
+---
+
+## Data frames, encore
+- 2D tables of data
+- Each case/observation is a row
+- Each variable/feature is a column
+- Variables can be of any type (numbers, text, Booleans, ...)
+- Both rows and columns can get names
+
+---
+
+## Creating an example data frame
+
+Use `data.frame()`, similar to how we create lists with `list()`
+
+```{r}
+my.df = data.frame(nums=seq(0.1,0.6,by=0.1), chars=letters[1:6], 
+                   bools=sample(c(TRUE,FALSE), 6, replace=TRUE))
+my.df
+
+# Note, a list can have different lengths for different elements!
+my.list = list(nums=seq(0.1,0.6,by=0.1), chars=letters[1:12], 
+               bools=sample(c(TRUE,FALSE), 6, replace=TRUE))
+my.list
+```
+
+---
+
+## Indexing a data frame
+
+- By rows/columns: similar to how we index matrices
+- By columns only: similar to how we index lists
+
+```{r}
+my.df[,1] # Also works for a matrix 
+my.df[,"nums"] # Also works for a matrix
+my.df$nums # Doesn't work for a matrix, but works for a list
+my.df$chars # Note: this one has been converted into a factor data type
+
+is.factor(my.df$chars)
+
+as.character(my.df$chars) # Converting it back to a character data type
+is.factor(as.character(my.df$chars))
+
+
+```
+
+---
+
+## Creating a data frame from a matrix
+
+Often times it's helpful to start with a matrix, and add columns (of different data types) to make it a data frame
+
+```{r}
+class(state.x77) # Built-in matrix of states data, 50 states x 8 variables
+head(state.x77) 
+class(state.region) # Factor of regions for the 50 states
+head(state.region)
+class(state.division) # Factor of divisions for the 50 states
+head(state.division) 
+```
+
+---
+
+```{r}
+# Combine these into a data frame with 50 rows and 10 columns
+state.df = data.frame(state.x77, Region=state.region, Division=state.division)
+class(state.df)
+head(state.df) # Note that the first 8 columns name carried over from state.x77
+```
+`data.frame()` is combining a pre-existing matrix (`state.x77`) and two vectors of qualitative categorical variables (called **factors**; `state.region`, `state.division`)
+
+Column names are preserved or guessed if not explicitly set
+
+---
+
+```{r}
+colnames(state.df)
+state.df[1,]
+```
+
+---
+
+## Data frame access
+By row and column index
+```{r}
+state.df[49,3]
+```
+
+By row and column names
+```{r}
+state.df["Wisconsin","Illiteracy"]
+```
+
+---
+
+## Data frame access (cont'd)
+All of a row:
+```{r}
+state.df["Wisconsin",]
+```
+<small>Exercise: what class is `state.df["Wisconsin",]`?</small>
+
+```{r}
+is.list(state.df["Wisconsin",])
+is.data.frame(state.df["Wisconsin",])
+class(state.df["Wisconsin",])
+```
+
+---
+
+## Data frame access (cont'd.)
+All of a column:
+```{r}
+head(state.df[,3])
+head(state.df[,"Illiteracy"])
+head(state.df$Illiteracy)
+```
+
+---
+
+## Data frame access (cont'd.)
+Rows matching a condition:
+```{r}
+state.df[state.df$Division=="New England", "Illiteracy"]
+state.df[state.df$Region=="South", "Illiteracy"]
+```
+
+---
+
+## Adding columns to a data frame
+
+To add columns: we can either use `data.frame()`, or directly define a new named column
+
+```{r}
+# First way: use data.frame() to concatenate on a new column
+state.df = data.frame(state.df, Cool=sample(c(T,F), nrow(state.df), rep=TRUE))
+head(state.df, 4)
+
+# Second way: just directly define a new named column
+state.df$Score = sample(1:100, nrow(state.df), replace=TRUE)
+head(state.df, 4)
+```
+
+---
+
+## Deleting columns from a data frame
+
+To delete columns: we can either use negative integer indexing, or set a column to `NULL`
+
+```{r}
+# First way: use negative integer indexing
+ncol(state.df) ## this is 12, therefore remove the 12th col
+state.df = state.df[,-ncol(state.df)]
+head(state.df, 4)
+
+# Second way: just directly set a column to NULL
+state.df$Cool = NULL
+head(state.df, 4)
+```
+
+---
+
+## Reminder: Boolean indexing
+
+With matrices or data frames, we'll often want to access a subset of the rows corresponding to some condition. You already know how to do this, with Boolean indexing
+
+```{r}
+# Compare the averages of the Frost column between states in New England and
+# Pacific divisions
+t <- state.df$Division == "New England"
+t
+mean(state.df[(state.df$Division == "New England"), "Frost"]) 
+mean(state.df[(state.df$Division == "Pacific"), "Frost"]) 
+```
+> What is the average of Frost for the division that contains Texas?
+
+```{r}
+
+texas.division <- state.df["Texas","Division"]
+texas.division
+division <- state.df$Division==texas.division
+state.df$Frost
+mean(state.df[division,"Frost"])
+```
+
+---
+
+## `subset()`
+
+The `subset()` function provides a convenient alternative way of accessing rows for data frames
+
+```{r}
+# Using subset(), we can just use the column names directly (i.e., no need for
+# using $)
+state.df.ne.1 = subset(state.df, Division == "New England")
+state.df.ne.1
+
+state.df$Division == "New England"
+t <- state.df[state.df$Division == "New England",]
+t
+
+# Get same thing by extracting the appropriate rows manually
+state.df.ne.2 = state.df[state.df$Division == "New England", ]
+state.df.ne.2
+all(state.df.ne.1 == state.df.ne.2)
+
+# Same calculation as in the last slide, using subset()
+mean(subset(state.df, Division == "New England")$Frost)
+mean(subset(state.df, Division == "Pacific")$Frost) # Wimps
+```
+
+---
+
+## Replacing values
+Parts or all of the data frame can be assigned to:
+```{r}
+summary(state.df$HS.Grad)
+state.df$HS.Grad <- state.df$HS.Grad/100
+summary(state.df$HS.Grad)
+state.df$HS.Grad <- 100*state.df$HS.Grad
+```
+
+---
+
+## `with()`
+
+The `with()` function provides a way of expressing operations by column names only.
+
+What percentage of literate adults graduated high school?
+```{r}
+head(100*(state.df$HS.Grad/(100-state.df$Illiteracy)))
+# highschool grad / literacy
+```
+
+`with()` takes a data frame and evaluates an expression "inside" it:
+```{r}
+with(state.df, head(100*(HS.Grad/(100-Illiteracy))))
+```
+(so you don't have to type `state.df$xyz`)
+
+---
+
+## Data arguments
+Lots of functions take `data` arguments, and look variables up in
+that data frame:
+```{r fig.height=5, fig.width=5}
+plot(Illiteracy~Frost, data=state.df)
+```
+
+---
+
+## Summary
+
+- Data frames are a representation of the "classic" data table in R: rows are observations/cases, columns are variables/features
+- Each column can be a different data type (but must be the same length)
+- `subset()`: function for extracting rows of a data frame meeting a condition 
+- `with()`: function for operating on data frame columns without indexing
