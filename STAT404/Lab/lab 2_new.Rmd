@@ -1,0 +1,271 @@
+---
+title: "Lab 2"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+# knitr::opts_knit$set(root.dir = "<your data directory here>")
+```
+
+# Instructions
+
+In this set of exercises, you will be devising a new grading scheme for the students in the `2009Grade.csv` data. Begin by setting your working directory in the code chunk above and loading the data into a variable called `df`.
+
+```{r}
+df <- read.csv("/Users/jasperstone/Desktop/Joseph/2023 Spring/STAT404/2009Grade.csv")
+```
+
+# Problem 1
+
+You want to backtrack and see what grading scheme was used to initially calculate the student's grade as represented in the `Score` column of the data set. This can be accomplished using linear algebra.
+
+1.  Select the first four rows of the `data.frame`, and store them in a variable called `first.four`.
+
+*Hint: Recall that the first* $n$ rows of a `data.frame` can be selected using:
+
+`df[1:n, ]`
+
+```{r}
+class(df)
+first.four <- df[1:4,]
+class(first.four)
+first.four
+```
+
+2.  From `first.four`, put the `Mid1`, `Mid2`, `Final`, and `HW` columns into a matrix `A`. Then, put the `Score` column into a matrix called `b`.
+
+*Hint 1: Recall that if `df` is a `data.frame` with columns named `x`, `y`, and `z`, these columns can be selected using:*
+
+`df[ , c("x", "y", "z")]`
+
+*Hint 2: Use the `as.matrix` function*
+
+```{r}
+
+A <- as.matrix(first.four[, c("Mid1","Mid2","Final","HW")])
+b <- as.matrix(first.four$Score)
+dim(A)
+dim(b)
+```
+
+3.  This is now a system of linear equations $A\vec x = \vec b$, where $\vec x$ are the weightings. Solve for the weightings.
+
+*Hint: Use `solve`*
+
+```{r}
+solve(A,b)
+```
+
+# Problem 2
+
+Now that you have recovered the initial weightings, you would like to add a curve to the student's final exam scores. You will do this by:
+
+-   Dropping the top 5 scores
+-   Dropping the bottom 5 scores
+-   Calculating the mean of the remaining students
+-   Taking the difference between this mean and 85 to be the curve
+-   Adding this curve to all of the students' final exam scores
+
+1.  Save the final exam scores into a vector called `old.scores`. Use the `sort` function to drop the top and bottom five scores from this vector.
+
+```{r}
+old.scores<-df$Final
+print(old.scores)
+old.scores <- df[,"Final"]
+old.scores
+```
+
+```{r}
+
+temp <- sample(c(1:10), 10, replace=TRUE)
+
+
+temp <- sort(temp)
+
+temp <- temp[-c(1:3)]
+temp <- sort(temp, decreasing = TRUE)[-c(1:3)]
+class(temp)
+
+# print(sort(df$Final))
+# class(df$Final)
+# old.scores <- (sort(df$Final)[-c(1,5)])
+# print(".     ")
+# #old.scores
+# old.scores <- sort(old.scores, decreasing = TRUE)[-c(1,5)]
+# print("")
+# #old.scores
+
+old.scores <- df[,"Final"]
+is.data.frame(old.scores)
+test <- df$Final
+is.data.frame(test)
+
+print("orig")
+print(sort(df$Final))
+old.scores <- (sort(df$Final))[-c(1:5)] # smallest 5 remove 
+print("1st")
+old.scores
+old.scores <- sort(old.scores, decreasing = TRUE)[-c(1:5)] # largest 5 remove
+print("2nd")
+old.scores
+```
+
+2.  Calculate the curve by taking the mean of `old.scores` and subtracting it from 85. Add this curve to everyone's final exam score, and save it to a new column in the `df` called `new.final`.
+
+*Hint 1: To add a constant value to a vector `x`, use:* `x + 5`
+
+*Hint 2: To add a column to a `data.frame`, use:* `df$<new column name> = <vector of new values>`
+
+```{r}
+85 - mean(old.scores)
+df$new.final <-  df$Final+ (85 - mean(old.scores))
+df$new.final
+```
+
+# Problem 3
+
+You will now replace the student's lowest midterm grade with their **old** final exam grade if the old final exam grade is higher.
+
+1.  Use `cbind` to put the `Mid1` and `Mid2` columns into a matrix.
+
+```{r}
+mid1.mid2 <- cbind(df$Mid1, df$Mid2)
+is.matrix(mid1.mid2)
+```
+
+2.  Find the minimum of each row and save it to a vector. Add this vector to `df` in a new column called `mid.min`.
+
+*Hint: Use the `apply` function and `min`*
+
+```{r}
+
+df$mid.min <- apply(mid1.mid2, 1, min)
+df$mid.min
+```
+
+3.  Find the maximum of each row and save it to a vector. Add this vector to `df` in a new column called `mid.max`.
+
+```{r}
+df$mid.max <- apply(mid1.mid2, 1, max)
+df$mid.max
+```
+
+4.  Create a boolean vector that is `TRUE` for students whose lowest midterm is less than their final exam score, and is `FALSE` otherwise.
+
+```{r}
+final.better <- df$mid.min < df$Final
+final.better
+```
+
+5.  How many students have a higher score on their final than on their lowest midterm?
+
+*Hint: Try running the following line of code:*
+
+```{r}
+sum(c(TRUE, FALSE, TRUE))
+```
+
+```{r}
+sum(final.better)
+```
+
+6.  Return the **old** final exam scores for the students that performed better on the final than on their lowest midterm and save it in a vector called `final.replace`.
+
+*Hint: Recall that indexing a vector with a boolean vector (vector of `TRUE/ FALSE`) will return the original vector with the entries corresponding to `FALSE` removed*
+
+```{r}
+length(final.better)
+final.replace <- df$Final[final.better]
+length(final.replace)
+```
+
+7.  For students that performed better on the final than on their lowest midterm, replace the value in the `mid.min` column with the corresponding value in the `final.replace` vector.
+
+```{r}
+
+df$mid.min[final.better] <- final.replace 
+```
+
+# Problem 4
+
+1.  Use these modified weightings to calculate the new final exam score using matrix multiplication:
+
+-   `mid.min`: 10%
+-   `mid.max`: 30%
+-   `HW`: 10%
+-   `new.final`: 50%
+
+Save the new score in a new column called `new.score`.
+
+*Hint: Matrix `A` can be multiplied with matrix `x` using the following syntax:* `A %*% x`
+
+```{r}
+
+new.score = as.matrix(df[,c("mid.min", "mid.max", "HW", "new.final")]) %*% matrix(c(0.1, 0.3, 0.1, 0.5))
+df$new.score <- new.score
+df$new.score
+```
+
+2.  Generate a 5 number summary of the new and old scores.
+
+```{r}
+summary(df$Score)
+summary(df$new.score)
+```
+
+# Problem 5
+
+1.  Expand on the function `grader` that assigns a letter grade based on the student's new score so that it is in accordance with the following scale:
+
+-   A: $\geq 90$
+-   B: $\geq 80$
+-   C: $\geq 70$
+-   D: $\geq 60$
+-   F: $<60$
+
+Try it out by running the "test data" lines of code below.
+
+```{r}
+grader <- function(score){
+  
+  letter.grade <- "F"
+  
+  if(score >= 90){
+    letter.grade <- "A"
+  }
+  else if(score >= 80){
+    letter.grade <- "B"
+  }
+    else if (score>=70){
+      letter.grade<-"C"
+    }
+  else if (score>=60){
+    letter.grade<-"D"
+  }
+  return(letter.grade)
+}
+
+# test data
+test.score <- seq(0, 100, 10)
+test.letter <- sapply(test.score, grader)
+rbind(test.score, test.letter)
+```
+
+2.  Apply this function to the `new.score` column and save the new letters in a column called `new.grade`.
+
+*Hint: Use the `sapply` function, as demonstrated in the `test data` section above*
+
+```{r}
+df$new.grade <- sapply(df$new.score, grader)
+```
+
+3.  Create a new column called `update`. For the *j*-th student, the value in this column is: $$\text{Old: }x_j, \text{ New}: y_j$$
+
+where $x_j, y_j$ are the student's old letter grade and new letter grade respectively.
+
+*Hint: Use the `paste0` function*
+
+```{r}
+df$update <- paste0("old:", df$Grade, " new:", df$new.grade)
+df$update
+```
