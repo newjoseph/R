@@ -1,0 +1,131 @@
+---
+title: 'Lab 4'
+output: html_document
+---
+
+*Agenda*: Writing functions to automate repetitive tasks; fitting statistical models.
+
+The ***gamma*** distributions are a family of probability distributions defined by the density functions,
+
+$$ f(x) = \frac{x^{a-1} e^{-x/s}}{s^a \Gamma(a)} $$
+
+where the ***gamma function*** $\Gamma(a) = \int_{0}^{\infty}{u^{a-1} e^{-u} du}$ is chosen so that the total probability of all non-negative $x$ is 1. The parameter $a$ is called the ***shape***, and $s$ is the ***scale***. When $a=1$, this becomes the exponential distributions. The gamma probability density function is called `dgamma()` in R. You can prove (as a calculus exercise) that the expectation value of this distribution is $as$, and the variance $as^2$. If the mean and variance are known, $\mu$ and $\sigma^2$, then we can solve for the parameters,
+
+$$ a = \frac{a^2s^2}{as^2} = \frac{\mu^2}{\sigma^2} $$ $$ s = \frac{as^2}{as} = \frac{\sigma^2}{\mu} $$
+
+In this lab, you will fit a gamma distribution to data, and estimate the uncertainty in the fit.
+
+Our data today are measurements of the weight of the hearts of 144 cats.
+
+# Part I
+
+1.  The data is contained in a data frame called `cats`, in the R package `MASS`. (This package is part of the standard R installation.) This records the sex of each cat, its weight in kilograms, and the weight of its heart in grams. Load the data as follows:
+
+```{=html}
+<!-- -->
+```
+    library(MASS)
+    data(cats)
+
+Run `summary(cats)` and explain the results.
+
+```{r}
+library(MASS)
+data(cats)
+```
+
+2.  Plot a histogram of these heart weights using the `probability=TRUE` option. Add a vertical line with your calculated mean using `abline(v=yourmeanvaluehere)`. Does this calculated mean look correct?
+
+    ```{r}
+    hist(cats$Hwt, probability=TRUE, main = "mean of cats heart weights", xlab="heart weights", ylab="probability")
+    abline(v=mean(cats$Hwt))
+    ```
+
+3.  Define two variables, `fake.mean <- 10` and . Write an expression for $a$ using these placeholder values. Write another such expression for $s$ and find out it's value.
+
+    $$ a = \frac{a^2s^2}{as^2} = \frac{\mu^2}{\sigma^2} $$
+
+    $$ s = \frac{as^2}{as} = \frac{\sigma^2}{\mu} $$
+
+    ```{r}
+    fake.mean <- 10
+    fake.var <- 8
+
+    a <- fake.mean^2/fake.var
+    s <- fake.var/fake.mean
+    print(paste(a,s))
+    ```
+
+4.  Calculate the mean, standard deviation, and variance of the heart weights using R's existing functions for these tasks. Use the mean and variance of the cats' hearts to get estimates of $a$ and $s$.
+
+    ```{r}
+    cat.mean <- mean(cats$Hwt)
+    cat.sd<- sd(cats$Hwt)
+    cat.var <- var(cats$Hwt)
+
+    est.a <- cat.mean^2/cat.sd^2
+    est.s <- cat.sd^2/cat.mean
+    print(paste(est.a, est.s))
+    ```
+
+5.  Calculate the mean, standard deviation, and variance of the body weights also find estimates of $a$ and $s$.
+
+    ```{r}
+    body.mean <- mean(cats$Bwt)
+    body.sd<- sd(cats$Bwt)
+    body.var <- var(cats$Bwt)
+
+    body.est.a <- body.mean^2/body.sd^2
+    body.est.s <- body.sd^2/body.mean
+    print(paste(body.est.a, body.est.s))
+    ```
+
+# Part II
+
+6.  Write a function, `gamma.cat()`, that calculates the mean and variances and returns the estimate of $a$ and $s$. What estimates does it give on the cats' hearts weight? Should it agree with your previous calculation?
+
+    ```{r}
+    gamma.cat <- function(data){
+      est.vec <- vector()
+      
+      data.mean <- mean(data)
+      data.sd<- sd(data)
+      data.var <- var(data)
+      
+      est.a <- data.mean^2/data.sd^2
+      est.s <- data.sd^2/data.mean
+      est.vec <- c(est.vec, est.a, est.s)
+      return (est.vec)
+    }
+    gamma.cat(cats$Hwt)
+    ```
+
+7.  Estimate the $a$ and $s$ separately for all the male cats and all the female cats, using `gamma.cat()`. Give the commands you used and the results.
+
+    ```{r}
+
+    gamma.cat(cats[cats$Sex=="M","Hwt"])
+    gamma.cat(cats[cats$Sex=="F","Hwt"])
+    gamma.cat(cats[cats$Sex=="M","Bwt"])
+    gamma.cat(cats[cats$Sex=="F","Bwt"])
+
+    ## Femals Cats with body weights 
+    gamma.cat(cats$Bwt[which(cats$Sex=='F')])
+    ## Femals Cats with heart weights 
+    gamma.cat(cats$Hwt[which(cats$Sex=='F')])
+    ## Male Cats with body weights 
+    gamma.cat(cats$Bwt[which(cats$Sex=='M')])
+    ## Male Cats with heart weights 
+    gamma.cat(cats$Hwt[which(cats$Sex=='M')])
+    ```
+
+8.  Now, produce a histogram for the female cats with heart weights. On top of this, add a density plot of female cats with heart weights. Is this distribution consistent with the empirical probability density of the histogram?
+
+    ```{r}
+    hist(cats[cats$Sex=="F","Hwt"],xlab = "Heart weights of female cats", main = "Plots of female cats' heart weights")
+
+    par(new=T)
+    plot(density(cats[cats$Sex=="F","Hwt"]), axes=F, ylab = "",xlab = "", main="")
+    ```
+
+9.  Repeat the previous step for male cats. How do the distributions compare?
