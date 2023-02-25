@@ -1,0 +1,155 @@
+---
+title: 'Lab 4'
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+*Agenda*: Importing and manipulating data; writing functions to estimate
+parameters; writing functions to check model fit.
+
+We look at a more systematic data source than Forbes magazine, the World
+Top Incomes Database hosted by the Paris School of Economics. This is
+derived from income tax reports, and compiles information about the very
+highest incomes in various countries over time, trying as hard as
+possible to produce numbers that are comparable across time and space.
+
+For most countries in most time periods, the upper end of the income
+distribution $roughly$ follows a ***Pareto distribution***, with
+probability density function
+
+$$ f(x) = \frac{(a-1)}{x_{min}}\bigg( \frac{x}{x_{min}} \bigg)^{-a}$$
+
+for incomes $x \ge x_{min}$. (Typically, $x_{min}$ is large enough that
+only the richest $3-4\%$ of the population falls above it.) As the
+***Pareto exponent*** $a$ gets smaller, the distribution of income
+becomes more unequal, that is, more of the population's total income is
+concentrated among the very richest people.
+
+The proportion of people whose income is at least $x_{min}$ whose income
+is $also$ at or above any level $w \ge x_{min}$ is thus
+
+$$Pr(X \ge w) = \int_{w}^{\infty} f(x)dx = \int_{x}^{infty} \frac{(a-1)}{x_{min}}\bigg( \frac{x}{x_{min}} \bigg)^{-a} dx = \bigg( \frac{w}{x_{min}} \bigg)^{-a+1} $$
+
+We will use this to estimate how income inequality changed in the US
+over the last hundred years or so. (Whether the trends are good or bad
+or a mix is beyond our scope here.)
+
+WTID exports its data sets as .xlsx spreadsheets. For this lab session,
+we have extracted the relevant data and saved it as wtid-report.csv.
+
+# Part I
+
+1.  Open the file and make a dataset containing only the year, "P99",
+    "P99.5" and "P99.9" variables; these are the income levels which put
+    one at the 99th, 99.5th, and 99.9th, percentile of income. What was
+    P99 in 1972? P99.5 in 1942? P99.9 in 1922? You must identify these
+    using your code rather than looking up the values manually. (You may
+    want to modify the column names to make some of them shorter.)
+
+    ```{r}
+    #part1
+    data <- read.csv("wtid-report.csv")
+    dim(data)
+    head(data)
+
+    colnames(data)
+    new.data <- data[,-c(1,3,4,8)]
+    dim(new.data)
+    head(new.data)
+    colnames(new.data)
+    colnames(new.data) <- c("Year","P99","P99.5","P99.9")
+    colnames(new.data)
+
+    #part2
+    new.data$P99[which(new.data$Year==1972)]
+    new.data$P99.5[which(new.data$Year==1942)]
+    new.data$P99.9[which(new.data$Year==1922)]
+
+    ```
+
+2.  Provide summary of all three variables and make the corresponding
+    plots.
+
+    ```{r}
+    summary(new.data$P99)
+    plot(new.data$P99)
+
+    summary(new.data$P99.5)
+    plot(new.data$P99.5)
+
+    summary(new.data$P99.9)
+    plot(new.data$P99.9)
+    ```
+
+3.  One can show from the earlier equations that one can estimate the
+    exponent by the formula
+
+$$ a = 1 - \frac{log \hspace{0.1cm} 10}{log \hspace{0.1cm} P99/P99.9} $$
+
+Write a function, exponent.est_ratio() which takes in values for P99 and
+P99.9, and returns the value of a implied by the equation above. Check
+that if P99=1e6 and P99.9=1e7, your function returns an a of 2.
+
+```{r}
+
+exponent.est_ratio <- function(p99, p99.9){
+  a <- 1 - (log(10)/log(p99/p99.9))
+  return(a)
+}
+
+exponent.est_ratio(p99=1e6, p99.9=1e7)
+```
+
+# Part II
+
+4.  Estimate a for each year in the data set, using your
+    exponent.est_ratio() function. If the function was written properly,
+    you should not need to use a loop. Plot your estimate of a over
+    time. Do the results look reasonable? (Remember that smaller
+    exponents mean more income inequality.)
+
+    ```{r}
+    result <- exponent.est_ratio(new.data$P99, new.data$P99.9)
+    plot(result)
+
+    plot(new.data$Year, result)
+    ```
+
+5.  Suppose, we consider the following.
+
+$$ \bigg( \frac{P99.5}{P99.9} \bigg)^{-a+1} = b $$
+
+Write a function which takes P99.5, P99.9 and a, and calculates the
+left-hand side of that equation. Plot the values for each year, using
+the data and your estimates of the exponent. Add a horizontal line with
+vertical coordinate.
+
+```{r}
+
+calc_b <- function(p99.5, p99.9, a){
+  b <- (p99.5/p99.9)^(-a+1)
+  return(b)
+}
+
+result2 <- calc_b(new.data$P99.5, new.data$P99.9, exponent.est_ratio(new.data$P99.5,new.data$P99.9))
+
+
+plot(new.data$Year, result2)
+abline(h=10, ylab="", xlab="", col="red")
+```
+
+6.  Repeat the previous step $(P99/P99.5)$ with this formula. How would
+    you describe this fit compared to the previous ones?
+
+(Note: the provided formula is not the best way to estimate a, but it is
+one of the simplest.)
+
+```{r}
+result3 <- calc_b(new.data$P99, new.data$P99.5, exponent.est_ratio(new.data$P99,new.data$P99.5))
+
+
+plot(new.data$Year, result2)
+abline(h=10, ylab="", xlab="", col="red")
+```
