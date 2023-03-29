@@ -1,0 +1,117 @@
+---
+title: "Lab 5"
+output: html_document
+font: 12pt
+---
+
+The distribution of talent is a major question of statistical research and a foundation of many young statistical careers (including 75% of your instructors), and there is no shortage of the distribution of observable talent in professional sports, of interest to many statisticians (including 50% of your instructors). In today's lab we will explore the distribution of one particular talent in baseball, reaching base safely, using the Beta distribution.
+
+The Beta is a random variable bounded between 0 and 1 and often used to model the distribution of proportions. The probability distribution function for the Beta with parameters $\alpha$ and $\beta$ is
+
+$$ p(x|\alpha, \beta) = \frac{\Gamma (\alpha + \beta)}{\Gamma (\alpha) + \Gamma(\beta)} x^{\alpha-1} (1-x)^{\beta - 1} $$
+
+where $\Gamma()$ is the Gamma function, the generalized version of the factorial. Thankfully, for this assignment, you need not know what the Gamma function is; you need only know that the mean of a Beta is $\frac{\alpha}{\alpha + \beta}$ and its variance is $\frac{\alpha \beta}{(\alpha + \beta)^2(\alpha + \beta + 1)}$.
+
+For this assignment you will test the fit of the Beta distribution to the on-base percentages (OBP) of hitters in the Major League Baseball season; each plate appearance (PA) results in the batter reaching base or not, and this measure is the fraction of successful attempts. Data is taken from this webpage [<https://www.baseball-reference.com/leagues/MLB/2018.shtml>].
+
+## Part I
+
+1.  Load the file sportsref.csv into a variable of your choice in R. How many players have been included? What is the minimum and maximum number of plate appearances? What are the minimum, maximum and mean OBP?
+
+    ```{r}
+    data = read.csv("sportsref.csv")
+    head(data)
+    dim(data)
+    summary(data$PA)
+    summary(data$OBP)
+    ```
+
+2.  Plot the OBP as a histogram. Add a vertical line for the mean of the distribution. Does the mean coincide with the mode of the distribution?
+
+    ```{r}
+    hist(data$OBP)
+    par(new=TRUE)
+    abline(v=mean(data$OBP), col='red', lwd=2)
+
+    ```
+
+3.  Eyeball fit. Add a density plot using the function `dbeta()`. Pick parameters $\alpha$ and $\beta$ that matches the mean of the distribution but where their sum equals 1. Add three more to this plot where the sum of these parameters equals 10, 100 and 1000 respectively. Which of these is closest to the observed distribution?\
+
+    ```{r, eval=FALSE, echo=FALSE}
+
+    #something is wrong here
+
+    seq1 <- seq(0, 1, length=100)
+    plot(density(dbeta(seq1, 0.5, 0.5)))
+    par(new=TRUE)
+    plot(density(dbeta(seq1, 5, 5)), xlab="", ylab="", main="")
+    par(new=TRUE)
+    plot(density(dbeta(seq1, 50, 50)), xlab="", ylab="", main="")
+    par(new=TRUE)
+    plot(density(dbeta(seq1, 500, 500)), xlab="", ylab="", main="")
+
+    plot()
+    ```
+
+    ```{r}
+    hist(data$OBP, lwd=2)
+    par(new=TRUE)
+    #plot(density(data$OBP, 0.5, 0.5), xlab="", ylab="", main="")
+    plot(density(dbeta(data$OBP,0.5,0.5)), ylab="", xlab="", main="",col = "red",lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,5,5)), ylab="", xlab="",axes=F, main="", col = "blue",lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,50,50)), ylab="", xlab="",axes=F, main="",col="green",lwd=2)
+    ```
+
+    ```{r}
+    hist(data$OBP, lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,0.5,0.5)), ylab="", xlab="",axes=F, main="",col = "red",lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,5,5)), ylab="", xlab="",axes=F, main="", col = "blue",lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,50,50)), ylab="", xlab="",axes=F, main="",col="green",lwd=2)
+    par(new=TRUE)
+    plot(density(dbeta(data$OBP,500,500)), ylab="", xlab="",axes=F, main="",col="purple",lwd=2)
+    ```
+
+    \
+
+## Part II
+
+4.  Method of moments fit. Find the calculation for the parameters from the mean and variance from [<http://en.wikipedia.org/wiki/Beta_distribution>] and solve for $\alpha$ and $\beta$. Create a new density histogram and add this `curve()` to the plot. How does it agree with the data?\
+
+    ```{r}
+
+    sample_mean = mean(data$OBP)
+    sample_var = var(data$OBP)
+
+    alpha_est = ((sample_mean*(1-sample_mean)/sample_var)-1)*sample_mean
+    beta_est = ((sample_mean*(1-sample_mean)/sample_var)-1)*(1-sample_mean)
+
+    hist(data$OBP, lwd=2)
+    par(new=TRUE)
+    plot(density(data$OBP,alpha_est,beta_est), col="red", axes=F, xlab="", ylab="", main="")
+    ```
+
+5.  Calibration. For the previous part, find the percentiles of the actual distribution using the `quantile()` function and plot them against the percentiles of the beta distribution you just fit using `qbeta()`. How does the fit appear to you (use abline to answer this question)?\
+
+    ```{r}
+    p<- seq(0,1,by=0.01)
+    plot(qbeta(pr,alpha_est, beta_est), quantile(data$OBP, prob=p))
+    par(new=TRUE)
+    abline(a=0, b=1, col='red', lwd=2)
+    ```
+
+6.  MLE fit. Create a function for the log-likelihood of the distribution that calculates `-sum(dbeta(your.data.here, your.alpha, your.beta, log=TRUE))` and has one argument `p=c(your.alpha, your.beta)`. Use `nlm()` to find the minimum of the negative of the log-likelihood. Take the MOM fit for your starting position. How do these values compare?
+
+    ```{r}
+    log_likelihood <- function(p=c(alpha, beta)){
+      return(-sum(dbeta(data$OBP, p[1], p[2], log=TRUE)))
+      
+    }
+
+    nlm(log_likelihood, c(alpha_est,beta_est))
+
+    ```
